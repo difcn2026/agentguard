@@ -1,0 +1,65 @@
+{
+  "test_logic_bug.py": {
+    "total": 1,
+    "types": [
+      "swallowed_exception"
+    ],
+    "findings": [
+      {
+        "risk_type": "swallowed_exception",
+        "line_start": 33,
+        "line_end": 38,
+        "confidence": 1.0,
+        "description": "Swallowed exception in verify_signature; any exception returns True, granting access even on failure",
+        "suggestion": "Do not catch all exceptions; let errors propagate or log and return False"
+      }
+    ]
+  },
+  "test_missing_auth.py": {
+    "total": 0,
+    "types": [],
+    "findings": []
+  },
+  "test_race_condition.py": {
+    "total": 0,
+    "types": [],
+    "findings": []
+  },
+  "test_swallowed_exception.py": {
+    "total": 3,
+    "types": [
+      "swallowed_exception"
+    ],
+    "findings": [
+      {
+        "risk_type": "swallowed_exception",
+        "line_start": 10,
+        "line_end": 15,
+        "confidence": 1.0,
+        "description": "Bare except:pass swallows file I/O and JSON parsing errors",
+        "suggestion": "Log the error or re-raise after handling specific exceptions"
+      },
+      {
+        "risk_type": "swallowed_exception",
+        "line_start": 20,
+        "line_end": 26,
+        "confidence": 1.0,
+        "description": "Except Exception:pass masks authentication failure",
+        "suggestion": "Log the error and/or re-raise after specific handling"
+      },
+      {
+        "risk_type": "swallowed_exception",
+        "line_start": 32,
+        "line_end": 36,
+        "confidence": 1.0,
+        "description": "Except:continue suppresses errors in loop processing",
+        "suggestion": "Log the error or handle specific exceptions instead of silently continuing"
+      }
+    ]
+  },
+  "test_toctou.py": {
+    "total": 0,
+    "types": [],
+    "findings": []
+  }
+}
