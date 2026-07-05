@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import List, Optional, Set
 
 from ..rules.python_rules import Rule, Severity, PYTHON_RULES, get_rules
+from ..ignore_config import IgnoreConfig
 from ..rules.js_rules import JS_RULES, JS_EXTENSIONS, get_js_rules
 
 
@@ -84,6 +85,7 @@ class CodeScanner:
         self.max_files = max_files
         self.use_ml = True  # Enable ML false-positive filter
         self._ml_filter = None
+        self._ignore_config = IgnoreConfig.from_file()
         self.use_llm = False  # Enable LLM secondary review (requires DS API)
         self._llm_reviewer = None
         self._compiled: List[tuple] = []
@@ -135,6 +137,15 @@ class CodeScanner:
                 result.total_lines += self._count_lines(filepath)
             except Exception as e:
                 result.errors.append(f"Error scanning {filepath}: {e}")
+        # Apply ignore config — filter out ignored findings
+        if self._ignore_config and self._ignore_config.file_patterns or self._ignore_config and self._ignore_config.rule_ids or self._ignore_config and self._ignore_config.file_rules:
+            before = len(result.findings)
+            result.findings = [f for f in result.findings 
+                             if not self._ignore_config.should_ignore(f.file, f.rule_id)]
+            ignored = before - len(result.findings)
+            if ignored:
+                result.errors.append(f"{ignored} findings ignored by .agentguard-ignore")
+
         result.false_positives_filtered = sum(1 for f in result.findings if f.confidence < 0.5)
 
         # ML heuristic confidence rescoring
@@ -168,6 +179,15 @@ class CodeScanner:
                 result.errors.append(f"GLM-5.2 deep scan error: {e}")
 
         # Recalculate filtered count after ML/LLM
+        # Apply ignore config — filter out ignored findings
+        if self._ignore_config and self._ignore_config.file_patterns or self._ignore_config and self._ignore_config.rule_ids or self._ignore_config and self._ignore_config.file_rules:
+            before = len(result.findings)
+            result.findings = [f for f in result.findings 
+                             if not self._ignore_config.should_ignore(f.file, f.rule_id)]
+            ignored = before - len(result.findings)
+            if ignored:
+                result.errors.append(f"{ignored} findings ignored by .agentguard-ignore")
+
         result.false_positives_filtered = sum(1 for f in result.findings if f.confidence < 0.5)
         return result
 
