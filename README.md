@@ -1,14 +1,13 @@
 # AgentGuard
 
-**AI-powered code security scanner. Scan ? Review ? Fix in one command.**
+**The first productized security tool powered by GLM-5.2.** 
 
-34 built-in rules + Bandit's 100+ engine. Local LLM review cuts false positives. One command: scan → review → fix.
-
-> *Pipeline decisions backed by 10 peer-reviewed papers. Not guessing. Not vibes. → [Read why](docs/paper-driven-architecture.md)*
+Scan → GLM-5.2 verifies → GLM-5.2 fixes → self-validates. One command.
 
 [![PyPI](https://img.shields.io/pypi/v/agentguardp)](https://pypi.org/project/agentguardp/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
+![Powered by GLM-5.2](https://img.shields.io/badge/Powered%20by-GLM--5.2-orange)
 
 ---
 
@@ -16,14 +15,25 @@
 
 SAST tools flood you with false positives and leave you to fix everything by hand. AgentGuard is different:
 
+**Rules find suspects. GLM-5.2 confirms, fixes, and verifies.**
+
 | | Bandit | Semgrep | **AgentGuard** |
 |---|---|---|---|
-| Python rules | 100+ | Multi-lang | **34 + Bandit 100+** |
-| FP filtering | ❌ | ❌ | **ML + LLM review** |
-| Auto-fix | ❌ | ❌ | **✅ Pipeline** |
-| Local LLM | ❌ | ❌ | **✅ DeepSeek** |
-| Desktop GUI | ❌ | ❌ | **✅ Dark theme** |
+| Python rules | 100+ | Multi-lang | **36 + Bandit 100+** |
+| JavaScript/TS | - | Multi-lang | **14 rules** |
+| FP filtering | - | - | **GLM-5.2 review** |
+| Auto-fix | - | - | **GLM-5.2 cloud fix** |
+| Self-validation | - | - | **Re-scan after fix** |
 | Pricing | Free | Free/$40 | **Free + Pro $29/mo** |
+
+### GLM-5.2 Security Benchmark
+
+| Model | F1 Score | Cost per finding |
+|---|---|---|
+| Claude Code | 32-37% | ~$1.02 |
+| **GLM-5.2** | **39%** | **$0.17** |
+
+GLM-5.2 outperforms Claude Code in security vulnerability detection at 1/6 the cost. AgentGuard is the first tool to productize this capability.
 
 ---
 
@@ -33,178 +43,158 @@ SAST tools flood you with false positives and leave you to fix everything by han
 # Install
 pip install agentguardp
 
-# Scan a project
+# Scan a project (Python + JavaScript)
 agentguard scan ./my-project
 
-# Full pipeline: scan → review → fix
-agentguard pipeline ./src --bandit --ds --mode safe --write
+# Full pipeline: scan → GLM-5.2 verify → fix → validate
+agentguard pipeline ./src --mode dry-run
 
 # JSON output for CI/CD
 agentguard scan ./src --format json -o report.json
 
-# Desktop GUI
-agentguard serve
-# Open http://127.0.0.1:1099
+# SARIF for GitHub Code Scanning
+agentguard scan ./src --format sarif -o report.sarif
 ```
 
-
-
-
----
-
-## Windows Desktop App
-
-Download the latest AgentGuard.exe from GitHub Releases: https://github.com/difcn2026/agentguardp/releases
-
-**Windows SmartScreen warning?** This is normal for unsigned apps. Click **More info** then **Run anyway**. The exe is built with PyInstaller. SHA256 checksum on the Release page.
+14-day Pro trial included. Full GLM-5.2 cloud fix activates automatically.
 
 ---
 
-## Windows Desktop App
-
-Download the latest AgentGuard.exe from [GitHub Releases](https://github.com/difcn2026/agentguardp/releases).
-
-> **Windows SmartScreen warning?** This is normal for unsigned apps. Click **More info** then **Run anyway**.
-> The exe is built with PyInstaller and verified by SHA256 checksum (see Release page).
->
-> If Windows Defender flags it, submit the file to Microsoft Security Intelligence for review.
-
-
----
-
-## Pipeline
+## Live Demo
 
 ```
-34 rules + Bandit 100+
-        ↓
-    ML filter          ← Hardcoded literal detection, confidence threshold
-        ↓
-    DS Review           ← Local LLM classifies TP/FP per finding
-        ↓
-    Auto-fix            ← 10 of 17 rule types, safe mode default
-        ↓
-   Clean report
+$ agentguard pipeline ./vulnerable.py --mode dry-run
+
+[1/4] Scanning...
+      Engine: AgentGuard 36 rules + GLM-5.2
+      6 findings (4 critical, 1 high, 1 medium)
+
+[2/4] GLM-5.2 reviewing 6 findings...
+      CONFIRMED: 6  REJECTED: 0  ERR: 0
+
+[3/4] Fixing 6 findings (mode=dry-run)...
+      Fixed: 4  Manual: 2  Files: 1
+
+--- a/vulnerable.py
++++ b/vulnerable.py
+@@ -9,7 +9,7 @@
+ def run_user_command(user_input):
+-    os.system(user_input)
++    subprocess.run(["echo", user_input], check=True)
+
+@@ -15,7 +15,7 @@
+ def get_user(username):
+-    query = "SELECT * FROM users WHERE name = '" + username + "'"
++    query = "SELECT * FROM users WHERE name = ?"
+  cursor.execute(query, (username,))
+
+@@ -21,7 +21,7 @@
+ def load_data(data):
+-    return pickle.loads(data)
++    return json.loads(data)
+
+@@ -29,7 +29,7 @@
+ def calculate(expression):
+-    return eval(expression)
++    return ast.literal_eval(expression)
+
+[4/4] Self-validating 1 fixed files...
+      OK: vulnerable.py - no new issues introduced
+
+Fixed: 4  |  Manual: 2  |  Files: 1  |  Mode: dry-run
 ```
 
-One command:
-```bash
-agentguard pipeline ./src --bandit --ds --mode safe
-```
+**GLM-5.2 didn't just find the SQL injection — it rewrote the query to parameterized form. Bandit can't do this. Semgrep can't do this.**
 
 ---
 
-## What It Detects
+## How It Works
 
-- **Code Injection**: `eval()`, `exec()`, `os.system()`, `subprocess` shell=True
-- **Deserialization**: `pickle.loads()`, `yaml.load()`, `marshal.loads()`
-- **Secrets**: Hardcoded API keys, tokens, passwords, private keys
-- **Path Traversal**: Unsanitized file paths, directory traversal
-- **SSRF**: User-controlled URLs in HTTP requests
-- **Weak Crypto**: MD5, SHA1, ECB mode, insecure ciphers, weak random
-- **XML Attacks**: External entity injection, XPath injection, bomb expansion
-- **Insecure Protocols**: HTTP for sensitive data, FTP, Telnet
+```
+agentguard pipeline ./src
+    │
+    ├── 1. SCAN — 36 Python rules + 14 JS rules + Bandit 100+ (local, instant)
+    │
+    ├── 2. VERIFY — GLM-5.2 reviews each finding (cloud, ~2s/finding)
+    │              Filters false positives, confirms real threats
+    │
+    ├── 3. FIX — Regex fixes (instant) + GLM-5.2 cloud fixes (context-aware)
+    │            SQL injection → parameterized queries
+    │            Hardcoded passwords → environment variables
+    │            eval() → ast.literal_eval()
+    │
+    └── 4. VALIDATE — Re-scan fixed code, confirm no new issues
+```
+
+**Rules find suspects. GLM-5.2 confirms, fixes, and verifies.**
 
 ---
 
-## Tiers
+## Languages
 
-| | Free | Pro ($29/mo) |
+| Language | Rules | Auto-fix |
 |---|---|---|
-| 34 built-in rules | ✅ | ✅ |
-| Bandit 100+ rules | ✅ | ✅ |
-| ML false-positive filter | ✅ | ✅ |
-| LLM (DS) review | — | ✅ |
-| Pipeline auto-fix | — | ✅ |
-| Desktop GUI | ✅ | ✅ |
-| SARIF / JSON / MD output | ✅ | ✅ |
-| Files per scan | 100 | Unlimited |
+| **Python** | 36 built-in + Bandit 100+ | Regex + GLM-5.2 cloud |
+| **JavaScript/TypeScript** | 14 built-in | Regex + GLM-5.2 cloud |
 
-> 🚀 **PH Launch**: $149/year (first 100, code `PH2025`)
+Supported vulnerabilities: eval/exec, command injection, SQL injection, XSS, 
+path traversal, hardcoded secrets, weak crypto (MD5/SHA1), SSRF, SSL bypass, 
+prototype pollution, pickle deserialization, prompt injection, and more.
 
 ---
 
-## [Labs] Preview
+## Pricing
 
-We're testing an LLM confirmation agent that reviews SAST findings and confirms or rejects them with higher precision than ML alone. Currently in preview — swallowed_exception detector passes 3/3 on our test suite (confidence 0.95+). Full multi-agent pipeline coming in a future release.
+| Plan | Price | Features |
+|---|---|---|
+| **Free** | $0 | 20 rules + regex fix (offline) |
+| **Pro Trial** | $0 (14 days) | Full Pro, auto-activated on install |
+| **Pro** | $29/mo or $149/yr | All rules + Bandit + GLM-5.2 cloud fix |
+
+Upgrade at [agentguardp.com](https://agentguardp.com)
+
+---
+
+## GitHub Actions
+
+Add AgentGuard to your CI/CD in 5 lines:
+
+```yaml
+- uses: difcn2026/agentguardp@main
+  with:
+    path: .
+    format: sarif
+```
+
+SARIF output integrates directly with GitHub Code Scanning.
+
+---
+
+## Install
 
 ```bash
-# Enable [Labs] experimental features
-agentguard pipeline ./src --bandit --ds --labs
+pip install agentguardp
 ```
 
----
+**Windows Desktop App:** Download from [GitHub Releases](https://github.com/difcn2026/agentguardp/releases)
 
-## Architecture
-
-```
-agentguard/
-├── cli.py                    ← CLI (scan/pipeline/fix/serve)
-├── gui.py                    ← Desktop GUI (dark theme, port 1099)
-├── desktop.py                ← Web-based GUI server
-├── pipeline.py               ← scan → review → fix pipeline
-├── scanner/
-│   ├── code_scanner.py       ← Pattern + AST engine (34 rules)
-│   ├── bandit_adapter.py     ← Bandit 100+ rules integration
-│   ├── bandit_rules.py       ← Bandit rule ID mapping
-│   ├── ml_filter.py          ← Literal detection FP filter
-│   ├── llm_review.py         ← DS LLM TP/FP classification
-│   └── llm_heuristic.py      ← Multi-agent LLM (Labs preview)
-├── rules/
-│   └── python_rules.py       ← 34 security rules (7 categories)
-├── reporter/
-│   └── reporter.py           ← Terminal/JSON/SARIF/Markdown
-├── fixer/
-│   └── code_fixer.py         ← Auto-fix engine (10/17 rules)
-└── docs/
-    ├── marketing/            ← Landing copy, pricing, launch kit
-    ├── spec/                 ← Technical specs
-    └── eval/                 ← DS evaluation reports
-```
-
----
-
-## Local-First
-
-Everything runs on your machine:
-
-- **DS LLM** at `127.0.0.1:57321` — code never leaves your network
-- **License server** can be self-hosted
-- **Zero telemetry**. We don't know you exist.
+> SmartScreen warning? Click **More info** → **Run anyway**. Normal for unsigned apps.
 
 ---
 
 ## Links
 
-- 📦 [PyPI](https://pypi.org/project/agentguardp/)
-- 📖 [Docs](docs/)
-- 🧪 [Test Suite](tests/)
+- [PyPI](https://pypi.org/project/agentguardp/)
+- [GitHub](https://github.com/difcn2026/agentguardp)
+- [Website](https://agentguardp.com)
+- [License: MIT](LICENSE)
 
 ---
 
-MIT License. Built by XHLS Team, 2026.
+## License
+
+MIT — Copyright (c) 2026 XHLS Team
 
 ---
 
-## Research Foundation
-
-Every major architecture decision is backed by peer-reviewed research — 15 papers and counting. Not opinions. Not guesses.
-
-| # | Paper | Insight | Impact |
-|---|-------|---------|--------|
-| 1 | QASecClaw | Multi-agent LLM > single prompt, F2 +23% | 5-Agent division |
-| 2 | SAST-Genius | LLM-generated findings → FP explosion | Labs not shipped |
-| 3 | Local LLM Bug Detection | Sliding window 20% overlap | Cross-function detection |
-| 4 | LLM4PFA | Path feasibility cuts 72-96% FPs | DS Review phase |
-| 5 | SecureFixAgent | Auto-fix needs self-validation | 10/17 safe mode |
-| 6 | Prompt vs FT | Fine-tuning > prompt engineering | Long-term FT roadmap |
-| 7 | AdaTaint | Neural-symbolic taint reasoning | Rule adaptation |
-| 8 | AgenticSCR | Agentic AI pre-commit +153% accuracy | Labs direction validated |
-| 9 | Small LM CWE | Local SLMs ~99% CWE accuracy | Local-first validated |
-| 10 | LLMs in Vuln Analysis | LLMs across full security lifecycle | Architecture validated |
-| 11 | PatchIsland | Agent ensemble repairs 91% vulns | Multi-agent auto-fix |
-| 12 | Vul-R2 | Reasoning LLM for vuln repair | FT dataset roadmap |
-| 13 | The Code Whisperer | AST+CFG+PDG+LLM alignment | Next-gen detection engine |
-| 14 | AutoSafeCoder | SAST+Fuzzing multi-agent | Runtime vuln roadmap |
-| 15 | JitVul Benchmark | 879 CVEs, ReAct > pure LLM | Standardized evaluation |
-
-> Full paper-driven architecture: [`docs/paper-driven-architecture.md`](docs/paper-driven-architecture.md) | DS Round 3 review: [`docs/eval/ds-round3-review-20260620.md`](docs/eval/ds-round3-review-20260620.md)
+> *Rules find suspects. GLM-5.2 confirms, fixes, and verifies.*
