@@ -4,7 +4,7 @@
 
 Scan → GLM-5.2 verifies → GLM-5.2 fixes → self-validates. One command.
 
-[![PyPI](https://img.shields.io/pypi/v/agentguard)](https://pypi.org/project/agentguard/)
+[![PyPI](https://img.shields.io/pypi/v/agentguardp)](https://pypi.org/project/agentguardp/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
 ![Powered by GLM-5.2](https://img.shields.io/badge/Powered%20by-GLM--5.2-orange)
@@ -41,7 +41,7 @@ GLM-5.2 outperforms Claude Code in security vulnerability detection at 1/6 the c
 
 ```bash
 # Install
-pip install agentguard
+pip install agentguardp
 
 # Scan a project (Python + JavaScript)
 agentguard scan ./my-project
@@ -173,7 +173,7 @@ SARIF output integrates directly with GitHub Code Scanning.
 ## Install
 
 ```bash
-pip install agentguard
+pip install agentguardp
 ```
 
 **Windows Desktop App:** Download from [GitHub Releases](https://github.com/difcn2026/agentguard/releases)
@@ -184,7 +184,7 @@ pip install agentguard
 
 ## Links
 
-- [PyPI](https://pypi.org/project/agentguard/)
+- [PyPI](https://pypi.org/project/agentguardp/)
 - [GitHub](https://github.com/difcn2026/agentguard)
 - [Website](https://agentguard.com)
 - [License: MIT](LICENSE)

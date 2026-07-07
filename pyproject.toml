@@ -1,6 +1,6 @@
 [project]
-name = "agentguard"
-version = "0.8.0"
+name = "agentguardp"
+version = "0.8.1"
 description = "AgentGuard — AI Code Security Scanner + Auto-Fixer"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -23,7 +23,7 @@ dependencies = [
 Homepage = "https://agentguardp.com"
 Repository = "https://github.com/difcn2026/agentguardp"
 "Bug Tracker" = "https://github.com/difcn2026/agentguardp/issues"
-PyPI = "https://pypi.org/project/agentguard/"
+PyPI = "https://pypi.org/project/agentguardp/"
 
 [project.optional-dependencies]
 dev = ["pytest>=7.0", "pytest-cov"]
